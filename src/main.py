@@ -39,12 +39,11 @@ def get_status(config):
         if (None == apikey):
             logging.error('apikey key is not specified')
 
-        poolclass = getattr(pools, poolname, None)
-        if (not poolclass):
+        pool = pools.getpool(poolname, apikey)
+        if None == pool:
             logging.error('Pool name %s is not valid' % poolname)
             continue
 
-        pool = poolclass(apikey)
         status = pool.get_status()
         status['time'] = datetime.isoformat(datetime.utcnow())
 
@@ -57,16 +56,21 @@ def main():
     logging.basicConfig(
             filename='bmonitor.log',
             filemode='a',
-            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+            format='%(asctime)s,%(msecs)d %(levelname)s %(message)s',
             datefmt='%H:%M:%S',
             level=logging.DEBUG)
 
     while 1:
-        # Read config each round to get config file change
-        config = read_config(setting.CONF_FILE)
-        get_status(config)
+        try:
+            # Read config each round to get config file change
+            config = read_config(setting.CONF_FILE)
+            get_status(config)
 
-        time.sleep(setting.WAIT_SEC)
+            time.sleep(setting.WAIT_SEC)
+        except KeyboardInterrupt:
+            break
+        except:
+            pass
 
 if __name__ == '__main__':
     main()
