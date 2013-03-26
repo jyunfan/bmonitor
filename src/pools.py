@@ -30,6 +30,13 @@ class Btcguild:
 
         try:
             data = json.loads(response)
+
+            # Create standard format
+            workers = {}
+            for key in data['workers']:
+                worker = data['workers'][key]
+                workers[worker['worker_name']] = { 'hash_rate': float(worker['hash_rate']) }
+            data['std'] = { 'workers' : workers }
         except:
             return {}
         return data
@@ -46,6 +53,13 @@ class Fiftybtc:
 
         try:
             data = json.loads(response)
+
+            # Create standard format
+            workers = {}
+            for key in data['workers']:
+                worker = data['workers'][key]
+                workers[worker['worker_name']] = { 'hash_rate': float(worker['hash_rate']) }
+            data['std'] = { 'workers' : workers }
         except:
             return {}
         return data
@@ -61,6 +75,13 @@ class Slush:
 
         try:
             data = json.loads(response)
+
+            # Create standard format
+            workers = {}
+            for key in data['workers']:
+                worker = data['workers'][key]
+                workers[key] = { 'hash_rate': worker['hashrate'] }
+            data['std'] = { 'workers' : workers }
         except:
             return {}
         return data

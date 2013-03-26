@@ -9,10 +9,16 @@ import logging
 import os
 import pprint
 import shelve
+import subprocess
+import sys
 import time
 
 import pools
 import setting
+
+HASH_RATE_THRESH = 1
+PROG_DIR = os.path.dirname(os.path.realpath(__file__))
+SCRIPT_FILE = os.path.join(PROG_DIR, '..', 'script', 'alert.sh')
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -45,10 +51,28 @@ def get_status(config):
             continue
 
         status = pool.get_status()
+        if not status:
+            logging.wraning('Pool %s return no data' % poolname)
         status['time'] = datetime.isoformat(datetime.utcnow())
 
         d[key] = status
         logging.debug(pprint.pformat(status))
+
+    d.close()
+
+# Get worker status and fire alerts if conditions meet
+def check_alert():
+    d = shelve.open(setting.DB_FILE)
+    for pool in d:
+        if not 'std' in d[pool] or not 'workers' in d[pool]['std']:
+            continue
+        workers = d[pool]['std']['workers']
+        for workername in workers:
+            if not 'hash_rate' in workers[workername]:
+                continue
+            if workers[workername]['hash_rate'] >= HASH_RATE_THRESH:
+                continue
+            subprocess.call([SCRIPT_FILE, pool, workername])
 
     d.close()
 
@@ -65,12 +89,13 @@ def main():
             # Read config each round to get config file change
             config = read_config(setting.CONF_FILE)
             get_status(config)
-
-            time.sleep(setting.WAIT_SEC)
+            check_alert()
         except KeyboardInterrupt:
             break
         except:
-            pass
+            print "Unexpected error:", sys.exc_info()[0]
+
+        time.sleep(setting.WAIT_SEC)
 
 if __name__ == '__main__':
     main()
