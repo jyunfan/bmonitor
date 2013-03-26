@@ -7,4 +7,5 @@ Usage
     $ python src/viewer.py &
 
 * Check bmonitor.log for debugging message.
-* Open http://<yourip>:2100/pool to see latest pool status
+* Open http://yourip:2100/pool to see latest pool status
+* Change script/alert.sh to handle alerts.
